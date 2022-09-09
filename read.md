@@ -34,4 +34,4 @@ matplotlib 3.5.2
 
 main.py
 
-输出虚拟身份证图像到指定目录
+输出虚拟身份证图像到指定目录(默认为 **datasets/card/**)

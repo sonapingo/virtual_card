@@ -5,19 +5,21 @@ from PIL import ImageFont, ImageDraw, Image
 import cv2
 import matplotlib.pyplot as plt
 
+
 def getinfo():
     info = {
-        '姓名': {'内容': '', '位置': (181, 116), '大小': 30},
-        '性别': {'内容': '', '位置': (180, 179), '大小': 24},
-        '民族': {'内容': '', '位置': (322, 179), '大小': 24},
-        '年': {'内容': '', '位置': (180, 236), '大小': 24},
-        '月': {'内容': '', '位置': (285, 236), '大小': 24},
-        '日': {'内容': '', '位置': (351, 236), '大小': 24},
-        '地址1': {'内容': '', '位置': (178, 292), '大小': 26},
-        '地址2': {'内容': '', '位置': (178, 330), '大小': 26},
-        '号码': {'内容': '', '位置': (288, 436), '大小': 30},
+        '姓名': {'内容': '徐  乐', '位置': (174, 114), '大小': 32},
+        '性别': {'内容': '男', '位置': (173, 178), '大小': 26},
+        '民族': {'内容': '汉', '位置': (314, 178), '大小': 26},
+        '年': {'内容': '1966', '位置': (175, 240), '大小': 26},
+        '月': {'内容': '11', '位置': (280, 239), '大小': 26},
+        '日': {'内容': '  2', '位置': (346, 238), '大小': 26},
+        '地址1': {'内容': '安徽省宿州市埇桥区朱仙', '位置': (175, 292), '大小': 26},
+        '地址2': {'内容': '庄镇', '位置': (175, 330), '大小': 26},
+        '号码': {'内容': '652901196611026716', '位置': (277, 440), '大小': 36},
     }
     return info
+
 
 def setname(info):
     if len(name_container) == 0:
@@ -33,10 +35,11 @@ def setname(info):
                 else:
                     name = fname + lname
                 name_container.append(name)
-    else:
-        random.shuffle(name_container)
-        name = name_container.pop()
-        info['姓名']['内容'] = name
+
+    random.shuffle(name_container)
+    name = name_container.pop()
+    info['姓名']['内容'] = name
+
 
 def setsex(info):
     sex_all = ['男', '女']
@@ -88,15 +91,6 @@ def setaddress(info):
 def setnumber(info):
     num = random.randint(100000000000000000, 999999999999999999)
     num = str(num)
-    num = list(num)
-    num.insert(3, ' ')
-    num.insert(6, ' ')
-    num.insert(9, ' ')
-    num.insert(13, ' ')
-    num.insert(16, ' ')
-    num.insert(19, ' ')
-    num.insert(22, ' ')
-    num = ''.join(num)
     info['号码']['内容'] = num
 
 
@@ -109,8 +103,15 @@ def drawinfo(img, info):
         content = value['内容']
         position = value['位置']
         size = value['大小']
-        font = ImageFont.truetype('font/msyh.ttc', size)
-        draw.text(position, content, font=font, fill=(0, 0, 0))
+        font_hei = ImageFont.truetype('font/simhei.ttf', size)
+        font_bt = ImageFont.truetype('font/OCR-B 10 BT.ttf', size)
+        font_arial = ImageFont.truetype('font/arial.ttf', size)
+        if key == '号码':
+            draw.text(position, content, font=font_bt, fill=(0, 0, 0))
+        elif key == '年' or key == '月' or key == '日':
+            draw.text(position, content, font=font_arial, fill=(0, 0, 0))
+        else:
+            draw.text(position, content, font=font_hei, fill=(0, 0, 0))
     photo = np.array(img_array)
     return photo
 
@@ -118,9 +119,21 @@ def drawinfo(img, info):
 def drawpicture(photo, faces):
     face_path = random.choice(faces)
     face = cv2.imread(face_path)
-    face = cv2.resize(face, (221, 272))
-    photo[126:398, 484:705] = face
-    return photo
+    face = cv2.resize(face, (216, 256))
+    # 裁剪头像区域
+    roi = photo[142:398, 480:696]
+    # 创建头像掩膜
+    faceGray = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+    ret, mask = cv2.threshold(faceGray, 250, 255, cv2.THRESH_BINARY)
+    maskInv = cv2.bitwise_not(mask)
+    # 保留除头像外的背景
+    photoBg = cv2.bitwise_and(roi, roi, mask=mask)
+    faceFg = cv2.bitwise_and(face, face, mask=maskInv)
+    # 融合背景和头像，粘贴在原图
+    dst = cv2.add(photoBg, faceFg)
+    photoCopy = photo.copy()
+    photoCopy[142:398, 480:696] = dst
+    return photoCopy
 
 
 def gamma_trans(img, gamma):
