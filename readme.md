@@ -7,7 +7,9 @@
 ## 1 环境准备
 
 python 3.9.13
+
 pytorch 1.12.1
+
 matplotlib 3.5.2
 
 ## 2 数据集
