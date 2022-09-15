@@ -17,9 +17,14 @@ matplotlib 3.5.2
 > datasets/card/
 
 存放虚拟身份证的文件夹
+
 > dataset/face/
  
 存放虚拟人像的文件夹
+
+> dataset/info/
+ 
+存放身份信息的文件夹
 
 > dataset/template.jpg
 
