@@ -1,3 +1,4 @@
+import json
 import random
 import os
 import numpy as np
@@ -8,26 +9,33 @@ import matplotlib.pyplot as plt
 
 def getinfo():
     info = {
-        '姓名': {'内容': '徐  乐', '位置': (174, 114), '大小': 32},
-        '性别': {'内容': '男', '位置': (173, 178), '大小': 26},
-        '民族': {'内容': '汉', '位置': (314, 178), '大小': 26},
-        '年': {'内容': '1966', '位置': (175, 240), '大小': 26},
-        '月': {'内容': '11', '位置': (280, 239), '大小': 26},
-        '日': {'内容': '  2', '位置': (346, 238), '大小': 26},
-        '地址1': {'内容': '安徽省宿州市埇桥区朱仙', '位置': (175, 292), '大小': 26},
-        '地址2': {'内容': '庄镇', '位置': (175, 330), '大小': 26},
-        '号码': {'内容': '652901196611026716', '位置': (277, 440), '大小': 36},
+        '姓名': {'内容': '', '位置': (174, 114), '大小': 32},
+        '性别': {'内容': '', '位置': (173, 178), '大小': 26},
+        '民族': {'内容': '', '位置': (314, 178), '大小': 26},
+        '年': {'内容': '', '位置': (175, 240), '大小': 26},
+        '月': {'内容': '', '位置': (280, 239), '大小': 26},
+        '日': {'内容': '', '位置': (346, 238), '大小': 26},
+        '地址1': {'内容': '', '位置': (175, 292), '大小': 26},
+        '地址2': {'内容': '', '位置': (175, 330), '大小': 26},
+        '号码': {'内容': '', '位置': (277, 440), '大小': 36},
     }
     return info
 
 
 def setname(info):
     if len(name_container) == 0:
-        first_name = ['赵', '钱', '孙', '李', '周', '吴', '郑', '王', '诸葛', '欧阳', '夏侯', '上官']
-        last_name = ['鹏', '涛', '炎', '彬', '鹤', '轩', '越', '彬', '风', '华', '靖', '琪', '明', '诚', '高', '格',
-                     '光',
-                     '华', '国', '源', '冠', '宇', '晗', '昱', '涵', '润', '翰', '飞', '香菱', '孤云', '水蓉', '雅容',
-                     '飞烟', '雁荷', '代芙', '醉易', '夏烟', '山梅', '若南', '恨桃', '依秋', '依波']
+        first_name = []
+        with open('datasets/info/firstname.txt',encoding='utf-8') as f:
+            lines = f.readlines()
+            for line in lines:
+                line=line.strip()
+                first_name.append(line)
+        last_name = []
+        with open('datasets/info/lastname.txt',encoding='utf-8') as f:
+            lines = f.readlines()
+            for line in lines:
+                line=line.strip()
+                last_name.append(line)
         for fname in first_name:
             for lname in last_name:
                 if len(fname) == 1 and len(lname) == 1:
@@ -43,7 +51,12 @@ def setname(info):
 
 def setsex(info):
     sex_all = ['男', '女']
-    nation_all = ['汉', '蒙古', '回', '藏', '维吾尔']
+    nation_all = []
+    with open('datasets/info/nation.txt', encoding='utf-8') as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip().replace('族', '')
+            nation_all.append(line)
     sex = random.choice(sex_all)
     nation = random.choice(nation_all)
     info['性别']['内容'] = sex
@@ -69,17 +82,20 @@ def setbirthday(info):
 
 
 def setaddress(info):
-    province_all = ['河北省', '山西省', '辽宁省', '吉林省', '黑龙江省', '江苏省', '浙江省', '安徽省', '福建省',
-                    '江西省', '山东省', '河南省', '湖北省', '湖南省', '广东省', '海南省', '四川省', '贵州省', '云南省',
-                    '陕西省', '甘肃省', '青海省', '台湾省']
-    city_all = ['东阳市', '西阳市', '南阳市', '北阳市']
-    region_all = ['经开区', '高新区', '滨湖区', '示范区', '政务区']
-    town_all = ['高塘岭镇', '星城镇', '丁字镇', '茶亭镇', '桥驿镇', '东城镇', '铜官镇', '靖港镇', '乔口镇', '乌山镇']
-    province = random.choice(province_all)
-    city = random.choice(city_all)
-    region = random.choice(region_all)
-    town = random.choice(town_all)
-    address = province + city + region + town
+    with open('datasets/info/cities.json',encoding='utf-8') as f:
+        cities = json.load(f)
+
+    province, city_dict = random.choice(list(cities.items()))
+    city, region_dict = random.choice(list(city_dict.items()))
+    if isinstance(region_dict,dict):
+        region,town_list = random.choice(list(region_dict.items()))
+        town = random.choice(town_list)
+        address = province + city + region + town
+    else:
+        town_list=region_dict
+        town = random.choice(town_list)
+        address = province + city + town
+
     if len(address) > 11:
         info['地址1']['内容'] = address[:11]
         info['地址2']['内容'] = address[11:]
@@ -167,6 +183,7 @@ if __name__ == '__main__':
         photo_light = gamma_trans(photo, 0.8)
         path = 'datasets/card/' + str(i) + '.jpg'
         cv2.imwrite(path, photo_light)
+        print(str(i)+' done')
 
     plt.imshow(photo_light[:, :, ::-1])
     plt.show()
