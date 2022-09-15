@@ -1,6 +1,7 @@
 import json
 import random
 import os
+from tqdm import tqdm
 import numpy as np
 from PIL import ImageFont, ImageDraw, Image
 import cv2
@@ -17,6 +18,7 @@ def getinfo():
         '日': {'内容': '', '位置': (346, 238), '大小': 26},
         '地址1': {'内容': '', '位置': (175, 292), '大小': 26},
         '地址2': {'内容': '', '位置': (175, 330), '大小': 26},
+        '地址3': {'内容': '', '位置': (175, 368), '大小': 26},
         '号码': {'内容': '', '位置': (277, 440), '大小': 36},
     }
     return info
@@ -96,13 +98,18 @@ def setaddress(info):
         town = random.choice(town_list)
         address = province + city + town
 
-    if len(address) > 11:
+    if len(address) > 22:
+        info['地址1']['内容'] = address[:11]
+        info['地址2']['内容'] = address[11:22]
+        info['地址3']['内容'] = address[22:]
+    elif 22 >= len(address) > 11:
         info['地址1']['内容'] = address[:11]
         info['地址2']['内容'] = address[11:]
+        info['地址3']['内容'] = ''
     else:
-        info['地址1']['内容'] = address[:11]
+        info['地址1']['内容'] = address
         info['地址2']['内容'] = ''
-
+        info['地址3']['内容'] = ''
 
 def setnumber(info):
     num = random.randint(100000000000000000, 999999999999999999)
@@ -162,13 +169,13 @@ if __name__ == '__main__':
     # 读取身份证模板和假人脸
     img_original = cv2.imread('datasets/template.jpg')
     faces = []
-    for dirpath, dirnames, filenames in os.walk('datasets/face'):
+    for dirpath, dirnames, filenames in os.walk('datasets/people_face'):
         for filename in filenames:
             faces.append(os.path.join(dirpath, filename))
     # 设定模板，设计一个姓名容器检测姓名重复
     info = getinfo()
     name_container = []
-    for i in range(500):
+    for i in tqdm(range(1000)):
         # 随机生产基本信息
         setname(info)
         setsex(info)
@@ -183,7 +190,6 @@ if __name__ == '__main__':
         photo_light = gamma_trans(photo, 0.8)
         path = 'datasets/card/' + str(i) + '.jpg'
         cv2.imwrite(path, photo_light)
-        print(str(i)+' done')
 
     plt.imshow(photo_light[:, :, ::-1])
     plt.show()
